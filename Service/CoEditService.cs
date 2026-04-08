@@ -1,5 +1,6 @@
 ﻿using SPCoEdit.Dto;
 using SPCoEdit.Utils;
+using System.Text.RegularExpressions;
 
 namespace SPCoEdit.Service
 {
@@ -13,6 +14,7 @@ namespace SPCoEdit.Service
             try
             {
                 var ticket = oTCSUtils.GetTicket();
+                fileName = $"{Path.GetFileNameWithoutExtension(fileName)} [NodeID={ID}]{Path.GetExtension(fileName)}";
                 var filePath = oTCSUtils.DownloadFile(ID, version, fileName, ticket);
                 if (filePath != null)
                 {
@@ -25,6 +27,31 @@ namespace SPCoEdit.Service
                     {
                         response.Error = "Failed to upload to SharePoint";
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+                response.Error = ex.Message;
+            }
+
+            return response;
+        }
+        public APIResponse<string> StopCoEdit(string fileName)
+        {
+            var response = new APIResponse<string>();
+
+            try
+            {
+                var nodeId = Regex.Match(fileName, @"NodeID=\{([^}]+)\}");
+
+                if (nodeId.Success)
+                {
+                    string id = nodeId.Groups[1].Value;
+                    var ticket = oTCSUtils.GetTicket();
+                    var actualFileName = Regex.Replace(fileName, @"\s*\[.*?\]", "");
+                    actualFileName = actualFileName.TrimEnd();
+                    //oTCSUtils.AddFileVersion(Int64.Parse(id), actualFileName, ticket);
                 }
             }
             catch (Exception ex)

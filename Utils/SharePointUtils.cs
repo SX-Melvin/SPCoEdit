@@ -23,7 +23,7 @@ namespace SPCoEdit.Utils
                 var data = JsonConvert.DeserializeObject<dynamic>(response.Content);
                 return (string)data.d.GetContextWebInformation.FormDigestValue;
             }
-            _logger.Error($"Failed to get request digest: {response.Content}"); // {"error":{"code":"-2130575251, Microsoft.SharePoint.SPException","message":{"lang":"en-US","value":"The security validation for this page is invalid and might be corrupted. Please use your web browser's Back button to try your operation again."}}}
+            _logger.Error($"Failed to get request digest: {response.Content}");
             return null;
         }
 
@@ -48,7 +48,7 @@ namespace SPCoEdit.Utils
                     var digest = GetRequestDigest();
                     if (digest == null) return null;
 
-                    var uploadRequest = new RestRequest($"lists/getbytitle('Documents')/RootFolder/Files/add(url='{fileName}', overwrite=false)", Method.Post);
+                    var uploadRequest = new RestRequest($"lists/getbytitle('Documents')/RootFolder/Files/add(url='{fileName}', overwrite=true)", Method.Post);
                     uploadRequest.AddHeader("X-RequestDigest", digest);
                     uploadRequest.AddFile("file", localFilePath);
                     var uploadResponse = _client.Execute(uploadRequest);
@@ -69,7 +69,7 @@ namespace SPCoEdit.Utils
                     if (getData?.value?.Any() == true)
                     {
                         var fileRef = getData.value[0].FileRef;
-                        return config.Value.SiteUrl + fileRef;
+                        return config.Value.WebUrl + fileRef;
                     }
                 }
             }

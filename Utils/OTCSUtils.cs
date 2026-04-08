@@ -12,6 +12,28 @@ namespace SPCoEdit.Utils
         private readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly RestClient _client = new RestClient(config.Value.ApiUrl);
+        public string? AddFileVersion(long ID, string filePath, string ticket)
+        {
+            string? result = null;
+
+            try
+            {
+                var request = new RestRequest($"v2/nodes/{ID}/versions", Method.Post);
+                request.AddHeader("OTCSTicket", ticket);
+                var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(filePath, out var contentType))
+                    contentType = "application/octet-stream";
+                request.AddFile(Path.GetFileName(filePath), filePath, contentType);
+                
+                var response = _client.Execute(request);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+            }
+
+            return result;
+        }
         public string? DownloadFile(long ID, int version, string fileName, string ticket, string? path = null)
         {
             string? result = null;
@@ -19,7 +41,7 @@ namespace SPCoEdit.Utils
             try
             {
                 fileName = Regex.Replace(fileName, @"[^\u0000-\u007F]", " ");
-                var request = new RestRequest($"v2/nodes/{ID}/versions/{version}/content", Method.Get);
+                var request = new RestRequest($"v2/nodes/{ID}/content", Method.Get);
                 request.AddHeader("OTCSTicket", ticket);
 
                 var savePath = Path.GetTempPath();
@@ -29,11 +51,17 @@ namespace SPCoEdit.Utils
                 }
 
                 var response = _client.Execute(request);
+                
+                if(response.Content.Count() < 50) // Assuming this might have error details
+                {
+                    _logger.Debug($"Download File Response: {response.Content}");
+                }
 
                 if (response.IsSuccessful)
                 {
                     File.WriteAllBytes(Path.Combine(savePath, fileName), response.RawBytes);
                     result = Path.Combine(savePath, fileName);
+                    _logger.Debug($"File downloaded successfully: {Path.Combine(savePath, fileName)}");
                 }
             }
             catch (Exception ex)
