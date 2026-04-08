@@ -79,6 +79,43 @@ namespace SPCoEdit.Utils
             }
             return null;
         }
+
+        public string DownloadFile(string fileName, string filePath)
+        {
+            try
+            {
+                var request = new RestRequest($"lists/getbytitle('Documents')/items?$filter=FileLeafRef eq '{fileName}'&$select=FileRef", Method.Get);
+                var response = _client.Execute(request);
+                if (!response.IsSuccessful)
+                {
+                    _logger.Error($"Failed to find file: {response.Content}");
+                    return null;
+                }
+
+                var data = JsonConvert.DeserializeObject<SharePointResponse>(response.Content);
+                if (data?.value?.Any() != true)
+                {
+                    _logger.Error($"File not found: {fileName}");
+                    return null;
+                }
+
+                var fileRef = data.value[0].FileRef;
+                var downloadRequest = new RestRequest($"GetFileByServerRelativeUrl('{fileRef}')/$value", Method.Get);
+                var downloadResponse = _client.Execute(downloadRequest);
+                if (downloadResponse.IsSuccessful)
+                {
+                    File.WriteAllBytes(filePath, downloadResponse.RawBytes!);
+                    return filePath;
+                }
+
+                _logger.Error($"Download failed: {downloadResponse.Content}");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+            }
+            return null;
+        }
     }
 
     public class SharePointItem

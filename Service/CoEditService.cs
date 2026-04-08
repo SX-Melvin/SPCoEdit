@@ -43,15 +43,15 @@ namespace SPCoEdit.Service
 
             try
             {
-                var nodeId = Regex.Match(fileName, @"NodeID=\{([^}]+)\}");
+                var nodeId = Regex.Match(fileName, @"\[NodeID=(\d+)\]");
 
                 if (nodeId.Success)
                 {
                     string id = nodeId.Groups[1].Value;
                     var ticket = oTCSUtils.GetTicket();
-                    var actualFileName = Regex.Replace(fileName, @"\s*\[.*?\]", "");
-                    actualFileName = actualFileName.TrimEnd();
-                    //oTCSUtils.AddFileVersion(Int64.Parse(id), actualFileName, ticket);
+                    var actualFileName = Regex.Replace(fileName, @"\s*\[NodeID=\d+\]", "");
+                    var spFile = sharePointUtils.DownloadFile(fileName, Path.Combine(Path.GetTempPath(), actualFileName));
+                    oTCSUtils.AddFileVersion(Int64.Parse(id), spFile, ticket);
                 }
             }
             catch (Exception ex)
