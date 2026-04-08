@@ -1,15 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
+using SPCoEdit.Dto;
+using SPCoEdit.Dto.CoEdit;
+using SPCoEdit.Service;
 
 namespace SPCoEdit.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CoEditController : ControllerBase
+    public class CoEditController(CoEditService service) : ControllerBase
     {
-        [HttpGet("Start/NodeID/{nodeID}")]
-        public string Get(long nodeID)
+        [HttpPost("Start")]
+        public APIResponse<string> Get([FromBody] CoEditRequest body)
         {
-            return "";
+            return service.StartCoEdit(body.NodeID, body.Version, body.FileName);
         }
     }
 }

@@ -16,9 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<CoEditService>();
 builder.Services.AddScoped<OTCSUtils>();
+builder.Services.AddScoped<SharePointUtils>();
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
@@ -37,7 +39,8 @@ builder.Services.Configure<SharePointConfiguration>(builder.Configuration.GetSec
 
 var app = builder.Build();
 app.UseCors("AllowAll");
-app.MapOpenApi();
-app.UseAuthorization();
+app.UseSwagger();
+app.UseSwaggerUI();
+//app.UseAuthorization();
 app.MapControllers();
 app.Run();
