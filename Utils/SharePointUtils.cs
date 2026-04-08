@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using RestSharp;
-using RestSharp.Authenticators;
 using Newtonsoft.Json;
 using SPCoEdit.Configurations;
 
@@ -11,8 +10,22 @@ namespace SPCoEdit.Utils
         private readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly RestClient _client = new RestClient(new RestClientOptions(config.Value.SiteUrl + "/_api/web/")
         {
-            Authenticator = new HttpBasicAuthenticator(config.Value.Username, config.Value.Password)
+            Credentials = new System.Net.NetworkCredential(config.Value.Username, config.Value.Password)
         });
+
+        private string GetRequestDigest()
+        {
+            var request = new RestRequest("../contextinfo", Method.Post);
+            request.AddHeader("Accept", "application/json;odata=verbose");
+            var response = _client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var data = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                return (string)data.d.GetContextWebInformation.FormDigestValue;
+            }
+            _logger.Error($"Failed to get request digest: {response.Content}"); // {"error":{"code":"-2130575251, Microsoft.SharePoint.SPException","message":{"lang":"en-US","value":"The security validation for this page is invalid and might be corrupted. Please use your web browser's Back button to try your operation again."}}}
+            return null;
+        }
 
         public string UploadOrGetUrl(string localFilePath, string fileName)
         {
@@ -22,6 +35,7 @@ namespace SPCoEdit.Utils
                 var fileExists = false;
                 var checkRequest = new RestRequest($"lists/getbytitle('Documents')/items?$filter=FileLeafRef eq '{fileName}'&$select=FileRef", Method.Get);
                 var checkResponse = _client.Execute(checkRequest);
+                _logger.Debug($"Check file response: {checkResponse.Content}");
                 if (checkResponse.IsSuccessful)
                 {
                     var data = JsonConvert.DeserializeObject<SharePointResponse>(checkResponse.Content);
@@ -31,9 +45,14 @@ namespace SPCoEdit.Utils
                 // If file does not exist, upload it first
                 if (!fileExists)
                 {
+                    var digest = GetRequestDigest();
+                    if (digest == null) return null;
+
                     var uploadRequest = new RestRequest($"lists/getbytitle('Documents')/RootFolder/Files/add(url='{fileName}', overwrite=false)", Method.Post);
+                    uploadRequest.AddHeader("X-RequestDigest", digest);
                     uploadRequest.AddFile("file", localFilePath);
                     var uploadResponse = _client.Execute(uploadRequest);
+                    _logger.Debug($"Upload response: {uploadResponse.Content}");
                     if (!uploadResponse.IsSuccessful)
                     {
                         _logger.Error($"Upload failed: {uploadResponse.Content}");
