@@ -33,6 +33,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.Configure<OTCSConfiguration>(builder.Configuration.GetSection("OTCS"));
+builder.Services.Configure<SharePointConfiguration>(builder.Configuration.GetSection("SharePoint"));
 
 var app = builder.Build();
 app.UseCors("AllowAll");
