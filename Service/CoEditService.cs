@@ -31,6 +31,7 @@ namespace SPCoEdit.Service
                     if (sharePointUrl != null)
                     {
                         response.Data = sharePointUrl;
+                        dbUtils.UpdateSessionWebUrl(session.ID, sharePointUrl);
                         oTCSUtils.ReserveNode(new()
                         {
                             ReservedUserID = body.UserID

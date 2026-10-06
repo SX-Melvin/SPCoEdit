@@ -9,6 +9,7 @@ namespace SPCoEdit.Database
         [Key]
         public long ID { get; set; }
         public long NodeID { get; set; }
+        public string? WebUrl { get; set; } = null;
         public DateTime CreatedAt { get; set; }
     }
 }

@@ -40,6 +40,15 @@ builder.Services.AddScoped<CoEditService>();
 builder.Services.AddScoped<OTCSUtils>();
 builder.Services.AddScoped<DbUtils>();
 builder.Services.AddScoped<SharePointUtils>();
+builder.Services.AddScoped<CronJobService>();
+builder.Services.AddOptions<CronJobConfiguration>()
+    .Bind(builder.Configuration.GetSection("CronJob"))
+    .Validate(options => options.IntervalMinutes > 0 && options.IntervalMinutes <= 71582,
+        "CronJob:IntervalMinutes must be between 1 and 71582 minutes.")
+    .Validate(options => options.IdleMinutes > 0,
+        "CronJob:IdleMinutes must be greater than zero.")
+    .ValidateOnStart();
+builder.Services.AddHostedService<CronJobBackgroundService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
