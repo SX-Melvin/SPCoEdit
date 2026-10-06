@@ -8,14 +8,14 @@ namespace SPCoEdit.Service
     public class CoEditService(OTCSUtils oTCSUtils, SharePointUtils sharePointUtils, DbUtils dbUtils)
     {
         private readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
-        public APIResponse<string> StartCoEdit(CoEditRequest body)
+        public APIResponse<string> StartCoEdit(CoEditRequest body, string? callerIp)
         {
             var response = new APIResponse<string>();
 
             try
             {
                 var ticket = oTCSUtils.GetTicket();
-                var session = dbUtils.InsertSession(body.NodeID);
+                var session = dbUtils.UpsertSession(body.NodeID, callerIp);
 
                 if(ticket == null)
                 {
@@ -51,7 +51,7 @@ namespace SPCoEdit.Service
 
             return response;
         }
-        public APIResponse<string> StopCoEdit(string fileName)
+        public APIResponse<string> StopCoEdit(string fileName, string? callerIp)
         {
             var response = new APIResponse<string>();
 
@@ -64,9 +64,9 @@ namespace SPCoEdit.Service
                 if (nodeId.Success && ticket != null)
                 {
                     long nodeID = long.Parse(nodeId.Groups[1].Value);
-                    dbUtils.DeleteSession(nodeID);
+                    dbUtils.DeleteSession(nodeID, callerIp);
 
-                    if (dbUtils.IsSessionEmpty(nodeID))
+                    if (dbUtils.IsSessionEmpty(nodeID, callerIp))
                     {
                         _logger.Info($"No more active sessions for NodeID={nodeID}. Uploading the latest version to SharePoint.");
                         oTCSUtils.ReserveNode(new()

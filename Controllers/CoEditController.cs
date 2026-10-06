@@ -12,13 +12,15 @@ namespace SPCoEdit.Controllers
         [HttpPost("Start")]
         public APIResponse<string> Start([FromBody] CoEditRequest body)
         {
-            return service.StartCoEdit(body);
+            string? callerIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            return service.StartCoEdit(body, callerIp);
         }
 
         [HttpPost("Stop/{fileName}")]
         public APIResponse<string> Stop(string fileName)
         {
-            return service.StopCoEdit(fileName);
+            string? callerIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            return service.StopCoEdit(fileName, callerIp);
         }
     }
 }

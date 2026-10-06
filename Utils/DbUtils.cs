@@ -38,29 +38,55 @@ namespace SPCoEdit.Utils
                 _context.SaveChanges();
             }
         }
-        public SPCoEditSessions InsertSession(long nodeId)
+        public SPCoEditSessions UpsertSession(long nodeId, string? callerIp = null) 
         {
+            if(callerIp != null)
+            {
+                var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId && s.CallerIp == callerIp);
+                if (existingSession != null)
+                {
+                    return existingSession;
+                }
+            }
+
             var newSession = new SPCoEditSessions
             {
                 CreatedAt = DateTime.Now,
-                NodeID = nodeId
+                NodeID = nodeId,
+                CallerIp = callerIp
             };
             _context.SPCoEditSessions.Add(newSession);
             _context.SaveChanges();
 
             return newSession;
         }
-        public void DeleteSession(long nodeID)
+        public void DeleteSession(long nodeID, string? callerIp = null)
         {
-            var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeID);
-            if (existingSession != null)
+            if(callerIp != null)
             {
-                _context.SPCoEditSessions.Remove(existingSession);
+                var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeID && s.CallerIp == callerIp);
+                if (existingSession != null)
+                {
+                    _context.SPCoEditSessions.Remove(existingSession);
+                }
+            }
+            else
+            {
+                var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeID);
+                if (existingSession != null)
+                {
+                    _context.SPCoEditSessions.Remove(existingSession);
+                }
             }
             _context.SaveChanges();
         }
-        public bool IsSessionEmpty(long nodeId)
+        public bool IsSessionEmpty(long nodeId, string? callerIp = null)
         {
+            if(callerIp != null)
+            {
+                return _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId && s.CallerIp == callerIp) == null;
+            }
+
             var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId);
             return existingSession == null;
         }

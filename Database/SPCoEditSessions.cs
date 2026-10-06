@@ -11,5 +11,6 @@ namespace SPCoEdit.Database
         public long NodeID { get; set; }
         public string? WebUrl { get; set; } = null;
         public DateTime CreatedAt { get; set; }
+        public string? CallerIp { get; set; } = null;
     }
 }
