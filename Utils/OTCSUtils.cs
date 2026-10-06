@@ -23,9 +23,10 @@ namespace SPCoEdit.Utils
                 var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
                 if (!provider.TryGetContentType(filePath, out var contentType))
                     contentType = "application/octet-stream";
-                request.AddFile(Path.GetFileName(filePath), filePath, contentType);
+                request.AddFile("file", filePath, contentType);
                 
                 var response = _client.Execute(request);
+                _logger.Info($"AddFileVersion Response: {response.Content}");
             }
             catch (Exception ex)
             {
@@ -230,6 +231,24 @@ namespace SPCoEdit.Utils
             }
 
             return result;
+        }
+        public void ReserveNode(ReserveNodeRequest body, long nodeID, string ticket)
+        {
+            try
+            {
+                var request = new RestRequest($"v2/nodes/{nodeID}", Method.Put);
+
+                request.AddHeader("OTCSTicket", ticket);
+
+                request.AddParameter("body", JsonConvert.SerializeObject(body));
+                var response = _client.Execute(request);
+
+                _logger.Info($"ReserveNode Response: {response.Content}");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+            }
         }
     }
 }

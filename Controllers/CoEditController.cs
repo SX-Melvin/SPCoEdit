@@ -12,7 +12,7 @@ namespace SPCoEdit.Controllers
         [HttpPost("Start")]
         public APIResponse<string> Start([FromBody] CoEditRequest body)
         {
-            return service.StartCoEdit(body.NodeID, body.Version, body.FileName);
+            return service.StartCoEdit(body);
         }
 
         [HttpPost("Stop/{fileName}")]

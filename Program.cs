@@ -2,6 +2,8 @@ using NLog.Extensions.Logging;
 using SPCoEdit.Configurations;
 using SPCoEdit.Service;
 using SPCoEdit.Utils;
+using SPCoEdit.Database;
+using Microsoft.EntityFrameworkCore;
 
 var config = new ConfigurationBuilder()
    .SetBasePath(Directory.GetCurrentDirectory())
@@ -13,9 +15,30 @@ NLog.LogManager.Configuration = new NLogLoggingConfiguration(config.GetSection("
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? Array.Empty<string>();
+
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder
+            .WithExposedHeaders("Content-Type", "Cache-Control", "Range")
+            .WithOrigins(allowedOrigins)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()
+));
 
 builder.Services.AddScoped<CoEditService>();
 builder.Services.AddScoped<OTCSUtils>();
+builder.Services.AddScoped<DbUtils>();
 builder.Services.AddScoped<SharePointUtils>();
 
 builder.Services.AddControllers();
