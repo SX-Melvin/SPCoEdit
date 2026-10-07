@@ -6,6 +6,7 @@ namespace SPCoEdit.Utils
 {
     public class DbUtils(AppDbContext _context)
     {
+        private readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
         public Task<List<IdleSessionGroup>> GetIdleSessionGroupsAsync(
             DateTime cutoff, CancellationToken cancellationToken)
         {
@@ -82,7 +83,9 @@ namespace SPCoEdit.Utils
         }
         public bool IsSessionEmpty(long nodeId)
         {
-            return _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId) == null;
+            var query = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId);
+            _logger.Info($"Query result for NodeID={nodeId}: {(query == null ? "No sessions found" : "Sessions exist")}");
+            return query == null;
         }
         public SPCoEditSessions? GetSession(long ID)
         {
