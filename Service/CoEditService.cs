@@ -66,7 +66,7 @@ namespace SPCoEdit.Service
                     long nodeID = long.Parse(nodeId.Groups[1].Value);
                     dbUtils.DeleteSession(nodeID, callerIp);
 
-                    if (dbUtils.IsSessionEmpty(nodeID, callerIp))
+                    if (dbUtils.IsSessionEmpty(nodeID))
                     {
                         _logger.Info($"No more active sessions for NodeID={nodeID}. Uploading the latest version to SharePoint.");
                         oTCSUtils.ReserveNode(new()

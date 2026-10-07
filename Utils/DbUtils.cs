@@ -80,15 +80,9 @@ namespace SPCoEdit.Utils
             }
             _context.SaveChanges();
         }
-        public bool IsSessionEmpty(long nodeId, string? callerIp = null)
+        public bool IsSessionEmpty(long nodeId)
         {
-            if(callerIp != null)
-            {
-                return _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId && s.CallerIp == callerIp) == null;
-            }
-
-            var existingSession = _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId);
-            return existingSession == null;
+            return _context.SPCoEditSessions.FirstOrDefault(s => s.NodeID == nodeId) == null;
         }
         public SPCoEditSessions? GetSession(long ID)
         {
