@@ -35,7 +35,7 @@ namespace SPCoEdit.Utils
 
             return result;
         }
-        public string? DownloadFile(long ID, int version, string fileName, string ticket, string? path = null)
+        public string? DownloadFile(long ID, string fileName, string ticket, string? path = null)
         {
             string? result = null;
 
@@ -53,17 +53,24 @@ namespace SPCoEdit.Utils
 
                 var response = _client.Execute(request);
                 
-                if(response.Content.Count() < 50) // Assuming this might have error details
+                if (!response.IsSuccessful)
                 {
-                    _logger.Debug($"Download File Response: {response.Content}");
+                    _logger.Error($"Download failed for NodeID={ID}: HTTP {(int)response.StatusCode}, {response.ErrorMessage}, {response.Content}");
+                    return null;
                 }
 
-                if (response.IsSuccessful)
+                var bytes = response.RawBytes;
+                if (bytes == null || bytes.Length == 0)
                 {
-                    File.WriteAllBytes(Path.Combine(savePath, fileName), response.RawBytes);
-                    result = Path.Combine(savePath, fileName);
-                    _logger.Debug($"File downloaded successfully: {Path.Combine(savePath, fileName)}");
+                    _logger.Error($"Download returned no file content for NodeID={ID}.");
+                    return null;
                 }
+
+                Directory.CreateDirectory(savePath);
+                var destination = Path.Combine(savePath, fileName);
+                File.WriteAllBytes(destination, bytes);
+                result = destination;
+                _logger.Debug($"File downloaded successfully: {result}, bytes={bytes.Length}, contentType={response.ContentType}");
             }
             catch (Exception ex)
             {

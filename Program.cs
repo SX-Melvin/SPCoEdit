@@ -40,6 +40,7 @@ builder.Services.AddScoped<CoEditService>();
 builder.Services.AddScoped<OTCSUtils>();
 builder.Services.AddScoped<DbUtils>();
 builder.Services.AddScoped<SharePointUtils>();
+builder.Services.AddSingleton<SharePointOnlineTokenProvider>();
 builder.Services.AddScoped<CronJobService>();
 builder.Services.AddOptions<CronJobConfiguration>()
     .Bind(builder.Configuration.GetSection("CronJob"))

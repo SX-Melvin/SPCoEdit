@@ -16,6 +16,7 @@ namespace SPCoEdit.Service
             {
                 var ticket = oTCSUtils.GetTicket();
                 var session = dbUtils.UpsertSession(body.NodeID, callerIp);
+                var fileName = $"{Path.GetFileNameWithoutExtension(body.FileName)} [NodeID={session.NodeID}]{Path.GetExtension(body.FileName)}";
 
                 if(ticket == null)
                 {
@@ -23,8 +24,12 @@ namespace SPCoEdit.Service
                     return response;
                 }
 
-                var fileName = $"{Path.GetFileNameWithoutExtension(body.FileName)} [NodeID={session.NodeID}]{Path.GetExtension(body.FileName)}";
-                var filePath = oTCSUtils.DownloadFile(session.NodeID, body.Version, fileName, ticket);
+                var filePath = oTCSUtils.DownloadFile(session.NodeID, fileName, ticket);
+                if (filePath == null)
+                {
+                    response.Error = "Failed to download from OTCS";
+                    return response;
+                }
                 if (filePath != null)
                 {
                     var sharePointUrl = sharePointUtils.UploadOrGetUrl(filePath, fileName);
